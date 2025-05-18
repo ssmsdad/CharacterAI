@@ -22,6 +22,7 @@ class MinIOService:
             # make this bucket public readable throw url
             self.minio_client.set_bucket_policy(
                 bucket_name=self.bucket_name,
+                # json.dumps将字典转换为JSON字符串，全称是dump string
                 policy=json.dumps(
                     {
                         "Version": "2012-10-17",
@@ -44,6 +45,7 @@ class MinIOService:
         # and return the url of minio
         path_prefix = conf.get_save_image_path()
         os.makedirs(path_prefix, exist_ok=True)
+        # os.path.basename会从url中提取最后的文件名部分
         filename = os.path.join(path_prefix, os.path.basename(url))
         with open(filename, "wb") as f:
             f.write(requests.get(url).content)

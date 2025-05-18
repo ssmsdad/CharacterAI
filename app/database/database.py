@@ -48,6 +48,7 @@ class DatabaseService:
     def get_admin(self) -> schema.User:
         admin = conf.get_admin()
         match self.get_user_by_name(name=admin.username):
+            # （）不是构造函数，而是模式匹配，匹配所有类型为schema.User的实例，并将其绑定到admin变量上（通过as实现绑定）
             case schema.User() as admin:
                 return admin
             case _:

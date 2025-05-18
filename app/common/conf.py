@@ -49,7 +49,9 @@ class MinioConf(BaseModel):
     endpoint: str = Field(description="对象存储服务的URL")
     access_key: str = Field(description="用户名")
     secret_key: str = Field(description="密码")
+    # 默认使用HTTP
     secure: bool = Field(default=False, description="true代表使用HTTPS")
+    # 存储桶名称，MinIO 中的文件都存储在桶里
     bucket_name: str = Field(description="存储桶名称")
 
 

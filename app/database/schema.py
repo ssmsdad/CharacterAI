@@ -36,6 +36,7 @@ def init_db():
 class User(Base):
     __tablename__ = "users"
 
+    # index为True，表示该字段会创建索引，提高查询效率
     uid: Mapped[int] = mapped_column(primary_key=True, index=True)
     name: Mapped[str] = mapped_column(unique=True, index=True)
     role: Mapped[str] = mapped_column(default=model.Role.USER.value)
@@ -46,6 +47,7 @@ class User(Base):
     password: Mapped[str] = mapped_column()
     is_deleted: Mapped[bool] = mapped_column(default=False)
 
+    # relationship用来声明模型之间的关系，这样就可以通过user.characters 获取该用户的所有角色，通过 character.associated_user 获取该角色所属的用户
     characters: Mapped[list["Character"]] = relationship(
         back_populates="associated_user"
     )
