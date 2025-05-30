@@ -37,6 +37,7 @@ async def update_character_info(
     user: Annotated[schema.User, Depends(get_user)],
 ) -> model.CharacterOut:
     character_update = minio_service.update_avatar_url(obj=character_update)
+    # 用户仅可以更新属于自己的角色
     if not user.is_admin():
         cids = [character.cid for character in user.characters]
         if cid not in cids:
@@ -107,6 +108,8 @@ async def create_character(
         file_length = 0
         async with aiofiles.open(file=filename, mode="wb") as out_file:
             chunk_size = 4096  # 4K
+            # := 是一个海象运算符，它允许在表达式中赋值
+            # 这里的意思是：当 file.read(size=chunk_size) 有值时，就将值赋给 content
             while content := await file.read(size=chunk_size):
                 await out_file.write(content)
                 file_length += chunk_size // 1024

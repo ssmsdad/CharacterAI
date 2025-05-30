@@ -11,24 +11,16 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship, sessionmaker
 
 from app.common import conf, model
 
-# database engine
-# Create a database URL for SQLAlchemy¶
-# This is the main line that you would have to modify if you wanted to use a different database.
+
 SQLALCHEMY_DATABASE_URL = conf.get_postgres_sqlalchemy_database_url()
-# pool maintain the connections to database
-# when the session need to issue a sql, it retrieves a connection from this pool
-# and until the transaction related to the session is commit or rollback, this connection will end and returned to the poll
-# and session is not thread-safe or async-safe, so we need to add the pool_size
+# 创建数据库引擎（用于建立与不同数据库的连接），连接池大小为32
 engine = create_engine(url=SQLALCHEMY_DATABASE_URL, pool_size=32)
-# class factory
-# configured to create instances of Session bound to your specific database engine
-# Each instance of SessionLocal represents a standalone conversation (or session) with the database
+# 创建会话类（用于创建于数据库交互的会话对象），autocommit=False表示不自动提交，autoflush=False表示不自动刷新
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-# base model like pydantic
-# Later we will inherit from this class to create each of the database models or classes (the ORM models):
 Base = declarative_base()
 
 
+# 创建数据库表，建立表之间的关系，创建索引，添加约束等
 def init_db():
     Base.metadata.create_all(bind=engine)
 

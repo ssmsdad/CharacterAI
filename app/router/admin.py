@@ -15,11 +15,14 @@ from app.dependency import get_admin, get_db
 admin = APIRouter(prefix="/api/admin")
 
 
+# db是通过依赖注入而不是头文件引入的原因是：
+# 数据库连接需要为每个请求创建一个新的实例，并在请求结束后正确关闭。使用依赖注入可以确保这种生命周期管理自动发生！！（重要，学到了）
 @admin.post("/user/update-profile")
 async def admin_user_update(
     db: Annotated[DatabaseService, Depends(dependency=get_db)],
     _: Annotated[schema.User, Depends(get_admin)],
     update: model.AdminUpdateUserProfile,
+#  FastAPI会自动将数据库模型(schema.User)尝试转换为响应模型(model.UserOut)
 ) -> model.UserOut:
     update = minio_service.update_avatar_url(obj=update)
     return db.update_user(uid=update.uid, user_update=update)
@@ -55,12 +58,14 @@ async def user_all(
     skip = (page_num - 1) * page_size
     limit = page_size
 
+    # 计算user.name与query的相似度,从0-100
     def sort_by_fuzz(user: schema.User) -> int:
         return fuzz.ratio(user.name, query)
-
+    
     scores = []
     if query is not None:
         users = db.get_users(skip=0, limit=9999999999)
+        # 将所有用户的name与query进行模糊匹配，并且降序排序
         users = sorted(users, key=sort_by_fuzz, reverse=True)
         users = users[skip : skip + limit]
         scores = [fuzz.ratio(user.name, query) for user in users]
@@ -69,6 +74,8 @@ async def user_all(
 
     user_outs: list[model.UserOut] = []
     for user in users:
+        # user.__dict__是一个字典，包含了所有的属性和属性值,**表示将字典中的键值对作为关键字参数传递给UserOut类的构造函数
+        # 因为user是一个schema.User对象，pydantic对象才有model_dump()方法，所以需要调用__dict()__方法将其转换为字典
         user_out = model.UserOut(**user.__dict__)
         user_outs.append(user_out)
 

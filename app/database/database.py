@@ -4,9 +4,7 @@
 
 from datetime import datetime
 
-from sqlalchemy import select, update
-from sqlalchemy.orm import Session
-
+from sqlalchemy import select
 from app.common import model
 from app.common.conf import conf
 from app.common.crypt import encrypt_password
@@ -27,6 +25,7 @@ class DatabaseService:
     # users
     # https://docs.sqlalchemy.org/en/20/tutorial/orm_data_manipulation.html#inserting-rows-using-the-orm-unit-of-work-pattern
     def create_user(self, user: model.UserCreate) -> schema.User:
+        # model_dump()用于将模型实例转换为字典
         db_user = schema.User(**user.model_dump())
         self._db.add(db_user)
         self._db.commit()
@@ -96,7 +95,8 @@ class DatabaseService:
     def get_user(self, uid: int) -> schema.User:
         db_user = self._db.get(schema.User, uid)
         return db_user
-
+    
+    # 得到跳过skip个用户的前limit个没有被删除的用户，并且按创建时间降序排列
     def get_users(self, skip: int, limit: int) -> list[schema.User]:
         result = self._db.execute(
             select(schema.User)
@@ -106,6 +106,9 @@ class DatabaseService:
             .offset(skip)
             .limit(limit)
         )
+        # result中每个元素都是一个元组，元组的第一个元素是schema.User对象，第二个元素为空[(user1,), (user2,), (user3,)]
+        # result.scalars()用来提取每个元组中的第一个元素，即schema.User对象
+        # result.scalars().all()用来将所有的schema.User对象提取出来，返回一个列表[user1, user2, user3]
         users = result.scalars().all()
         return [u for u in users]
 

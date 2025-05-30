@@ -25,5 +25,6 @@ class ZhipuAIEmbeddings(Embeddings):
             embeddings.append(response.data[0].embedding)
         return embeddings
 
+    # 将单个文本转换为嵌入向量
     def embed_query(self, text: str) -> List[float]:
         return self.embed_documents([text])[0]

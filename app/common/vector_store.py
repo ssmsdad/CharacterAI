@@ -39,6 +39,7 @@ class LoaderFactory:
 class KnowledgeBase:
     def __init__(self, urls: list[str] = [], files: list[str] = []):
         documents: list[Document] = []
+        # load()方法用于加载文档或UR网页L内容
         for url in urls:
             documents.extend(WebBaseLoader(web_path=url).load())
         for file in files:
@@ -47,6 +48,7 @@ class KnowledgeBase:
         splitter = RecursiveCharacterTextSplitter(
             chunk_size=1000, chunk_overlap=200, add_start_index=True
         )
+        # documents是一个新的、更小的Document对象列表，每个对象包含原始文档的一个片段
         documents = splitter.split_documents(documents=documents)
 
         # add metadata for multi tenancy
@@ -55,6 +57,7 @@ class KnowledgeBase:
             doc.metadata["knowledge_id"] = self.knowledge_id
 
         self.collection_name = "my_documents"
+        # 将文档存储到向量数据库中
         self.vector_store = Qdrant.from_documents(
             documents=documents,
             embedding=ZhipuAIEmbeddings(api_key=conf.get_zhipuai_key()),
@@ -63,9 +66,11 @@ class KnowledgeBase:
             collection_name=conf.get_qdrant_collection_name(),
         )
 
+    # 返回一个检索器对象，用于从向量存储中检索文档
     @staticmethod
     def as_retriever(knowledge_id: str):
         vector_store = Qdrant.from_documents(
+            # 这个"hello"文档在实际中并不会被添加到向量数据库，只是创建一个到向量数据库的连接
             documents=[Document(page_content="hello")],
             embedding=ZhipuAIEmbeddings(api_key=conf.get_zhipuai_key()),
             url=conf.get_qdrant_host(),

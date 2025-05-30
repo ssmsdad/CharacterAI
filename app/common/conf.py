@@ -8,6 +8,7 @@ from typing import Any
 from pydantic import BaseModel, Field
 
 
+# prefer_grpc用于指定是否优先使用gRPC协议进行通信，true适用于大规模数据传输（应用环境），false适用于小规模数据传输（开发环境）
 class QdrantConf(BaseModel):
     host: str
     prefer_grpc: bool

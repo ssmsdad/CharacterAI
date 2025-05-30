@@ -33,6 +33,8 @@ async def register(
 
 @user.post("/login")
 async def user_login(
+    # OAuth2PasswordRequestForm会将表单数据解析为一个对象，这个对象包含了username和password两个字段
+    # Depends()表示直接依赖于这个对象，而不是依赖于函数的返回值
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     db: Annotated[DatabaseService, Depends(get_db)],
 ) -> model.Token:
@@ -43,6 +45,7 @@ async def user_login(
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    # 将当前用户输入的密码与数据库中经过hash的密码进行比对
     if not pwd_context.verify(form_data.password, user.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -50,6 +53,7 @@ async def user_login(
             headers={"WWW-Authenticate": "Bearer"},
         )
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    # 验证密码通过后，生成JWT token返回给用户，用于后续的身份验证
     access_token = create_access_token(
         data={"sub": str(user.uid)}, expires_delta=access_token_expires
     )

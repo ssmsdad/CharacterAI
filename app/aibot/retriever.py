@@ -68,6 +68,7 @@ class RAG(AIBot):
 
         # add chat history
         # https://python.langchain.com/docs/integrations/memory/sql_chat_message_history/
+        # BaseChatMessageHistory 什么角色（AI、HUMAN）的对话都可以存
         self.store: dict[str, BaseChatMessageHistory] = {}
         history = self._get_session_history(session_id=self.session_id)
         for message in chat_history:
@@ -82,6 +83,7 @@ class RAG(AIBot):
             self.store[session_id] = ChatMessageHistory()
         return self.store[session_id]
 
+    # 返回一个文档检索器，包含了历史消息的上下文信息
     def create_retriever(self):
         history_aware_prompt = ChatPromptTemplate.from_messages(
             messages=[
@@ -92,6 +94,7 @@ class RAG(AIBot):
         which can be understood without the chat history. Do NOT answer the question, \
         just reformulate it if needed and otherwise return it as is.""",
                 ),
+                # MessagesPlaceholder会被替换为从ChatMessageHistory存储中检索到的实际消息列表
                 MessagesPlaceholder("chat_history"),
                 ("human", "{input}"),
             ]
@@ -102,6 +105,7 @@ class RAG(AIBot):
             retriever=KnowledgeBase.as_retriever(knowledge_id=self.knowledge_id),
         )
 
+    # 使用接收到的文档检索器检索相关文档，并根据检索到的文档与历史消息的用户新问题，生成基于检索到的文档的回答
     def create_qabot(self):
         # 2. QA chain
         return create_stuff_documents_chain(
@@ -123,6 +127,12 @@ class RAG(AIBot):
             llm=self.model,
         )
 
+    # 创建一个RAG链，能够在执行过程中自动管理对话历史记录
+    # 当它被调用时（通过ainvoke()或astream()方法），它会：
+    # 加载相关会话历史
+    # 执行检索
+    # 基于检索结果生成回答
+    # 自动更新会话历史
     def create_rag(self):
         def get_session_history(session_id: str) -> BaseChatMessageHistory:
             if session_id not in self.store:
@@ -136,6 +146,7 @@ class RAG(AIBot):
             ),
             get_session_history=get_session_history,
             input_messages_key="input",
+            # 指定输出消息的键名
             output_messages_key="answer",
             history_messages_key="chat_history",
         )

@@ -35,7 +35,7 @@ class UserUpdate(BaseModel):
     avatar_description: str | None = Field(default=None, description="用户自我介绍")
     avatar_url: str | None = Field(default=None, description="头像url")
 
-
+# 用用于管理员更新用户信息
 class AdminUpdateUserProfile(UID, UserUpdate):
     pass
 
@@ -244,6 +244,9 @@ class ResponseModel(BaseModel):
 # /character_llm (RequestPayload) -> ResponseModel
 
 
+# MessageSender的两种用法：
+# sender = MessageSender.AI  这会得到字符串值 "assistant"
+# sender = MessageSender("assistant")  # 这会得到 MessageSender.AI 枚举成员
 class MessageSender(str, Enum):
     HUMAN = "user"
     AI = "assistant"

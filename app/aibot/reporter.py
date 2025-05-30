@@ -61,6 +61,10 @@ class Reporter(AIBot):
         execute_query = QuerySQLDataBaseTool(db=db)
         write_query = create_sql_query_chain(self.llm, db)
         answer = get_data_prompt | self.llm | StrOutputParser()
+        # 输入：{"question": "请判断characters表中是否有字段'uid'的值为123的数据"}
+        # write_query 会生成 SQL 查询语句，输出为：{"question": "请判断...", "query": "SELECT * FROM characters WHERE uid = 123"}
+        # itemgetter("query") | execute_query 会执行 SQL 查询，输出为查询结果
+        # 输出：{"question": "请判断...", "query": "SELECT * FROM...", "result": [{"id": 1, "name": "..."}]}
         chain = (
             RunnablePassthrough.assign(query=write_query).assign(
                 result=itemgetter("query") | execute_query
@@ -149,6 +153,8 @@ class Reporter(AIBot):
         os.makedirs(path_prefix, exist_ok=True)
         return os.path.join(path_prefix, f"{uuid.uuid4()}.png")
 
+        # 首先判断问题与绘画图标有没有关联，之后将问题丢入RunnablePassthrough数据传递器中，分别生成对应的query与result，返回最终的查询结果
+        # 将查询结果丢给大模型生成相应的绘图代码并执行，将图片保存
     def reporter_llm(self, question: str, uid: int) -> ReportResponseV2:
         # 根据用户的content问题和uid，生成对应报表
         flag = self.check_question(question)

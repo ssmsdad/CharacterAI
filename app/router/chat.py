@@ -25,6 +25,7 @@ async def websocket_endpoint(
     token_data = await get_token_data(token=token)
     user = get_user(token_data=token_data, db=db)
 
+    # 确认服务器愿意建立 WebSocket 连接
     await websocket.accept()
     character = db.get_character(cid=cid)
     chat_history: list[Message] = []
@@ -51,6 +52,7 @@ async def websocket_endpoint(
             user_input = await websocket.receive_json()
             user_input = model.ChatMessage(**user_input)
             content = ""
+            # 因为返回的ai_output是一个异步生成器对象，所以要用异步for循环来遍历
             async for ai_output in aibot.ainvoke(input=user_input):
                 await websocket.send_json(data=ai_output.model_dump())
                 content += ai_output.content
